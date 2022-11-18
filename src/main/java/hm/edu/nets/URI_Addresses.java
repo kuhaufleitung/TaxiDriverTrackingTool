@@ -14,4 +14,5 @@ public record URI_Addresses() {
     //Bridge4
     // URI HueURI = URI.create("http://10.28.9.123/api/2b2d3ff23d63751f10c1d8c0332d50ff/lights/");
     static URI HERE_Geocode = URI.create("https://geocode.search.hereapi.com/v1/geocode");
+    public static URI ServerURI = URI.create("http://localhost:8080/driver");
 }

@@ -1,21 +1,29 @@
 package hm.edu.nets.client;
 
-import java.net.URI;
+import hm.edu.nets.RestCommunication;
+import hm.edu.nets.URI_Addresses;
+import org.json.JSONObject;
+
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 
 public class DriverClient {
-    //TODO: connect to server, make request
+    //ONLY REQUESTS HERE!
     //TODO: can query status(avail, pause, with guest, with guest and delay)
     HttpClient client = HttpClient.newHttpClient();
-    URI hostURI = URI.create("http://localhost:80/driver");
     private String driverID;
 
     public DriverClient(String driverID) {
         this.driverID = driverID;
+        //startRoute("Munich, Theresienstraße", "Starnberg, Hauptstraße");
+        getInformation();
     }
 
-    private void startRoute() {
-
+    private void startRoute(String departLoc, String arrivalLoc) {
+        JSONObject body = new JSONObject().put(driverID, new JSONObject().put("depart", departLoc).put("arrival", arrivalLoc));
+        HttpRequest request = HttpRequest.newBuilder().uri(URI_Addresses.ServerURI).PUT(HttpRequest.BodyPublishers.ofString(body.toString())).build();
+        String response = RestCommunication.sendAndGetResponse(client, request);
+        System.out.println(response);
     }
 
     private void delay() {
@@ -27,6 +35,13 @@ public class DriverClient {
     }
 
     private void setAvailable() {
+
+    }
+
+    private void getInformation() {
+        HttpRequest request = HttpRequest.newBuilder().uri(URI_Addresses.ServerURI).GET().build();
+        String response = RestCommunication.sendAndGetResponse(client, request);
+        System.out.println(response);
 
     }
 }

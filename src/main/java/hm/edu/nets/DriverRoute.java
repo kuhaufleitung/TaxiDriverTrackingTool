@@ -45,10 +45,10 @@ public class DriverRoute {
         int interval = 5000;
         try {
             switch (driver.getStatus()) {
-                case AVAILABLE -> HueRestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.GREEN));
-                case DRIVING -> HueRestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.YELLOW));
-                case ON_BREAK -> HueRestCommunication.sendAndGetResponse(client, LightStateCommands.lightOff(URI_Addresses.HueURI, driver.getDriverID()));
-                case DELAY -> HueRestCommunication.sendAndGetResponse(client, LightStateCommands.lightBlinking(URI_Addresses.HueURI, driver.getDriverID()));
+                case AVAILABLE -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.GREEN));
+                case DRIVING -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.YELLOW));
+                case ON_BREAK -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightOff(URI_Addresses.HueURI, driver.getDriverID()));
+                case DELAY -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightBlinking(URI_Addresses.HueURI, driver.getDriverID()));
             }
             Thread.sleep(interval);
         } catch (InterruptedException e) {

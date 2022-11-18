@@ -10,7 +10,7 @@ public class TotalTaxiTrackingToolServer {
         HttpClient MapsClient = HttpClient.newHttpClient();
 
         for (int i = 1; i <= 3; i++) {
-            System.out.println("[HUE_RESPONSE]: " + HueRestCommunication.sendAndGetResponse(MapsClient, LightStateCommands.initLight(HueURI, i)));
+            System.out.println("[HUE_RESPONSE]: " + RestCommunication.sendAndGetResponse(MapsClient, LightStateCommands.initLight(HueURI, i)));
         }
 
         while (true) {

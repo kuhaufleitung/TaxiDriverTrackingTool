@@ -5,11 +5,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-public class HueRestCommunication {
-    private HueRestCommunication() {
+public class RestCommunication {
+    private RestCommunication() {
         throw new UnsupportedOperationException();
     }
-    static String sendAndGetResponse(HttpClient client, HttpRequest request) {
+    public static String sendAndGetResponse(HttpClient client, HttpRequest request) {
         try {
             return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
         } catch (IOException e) {
