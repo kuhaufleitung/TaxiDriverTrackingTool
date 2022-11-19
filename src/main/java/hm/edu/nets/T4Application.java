@@ -8,7 +8,6 @@ public class T4Application {
 
 	public static void main(String[] args) {
 		SpringApplication.run(T4Application.class, args);
-		new TotalTaxiTrackingToolServer();
 	}
 
 }

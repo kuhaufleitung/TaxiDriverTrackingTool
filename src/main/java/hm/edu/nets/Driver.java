@@ -11,7 +11,7 @@ public class Driver {
         this.client = client;
         status = Status.AVAILABLE;
         this.driverID = driverID;
-        new Thread(updateLights());
+        //new Thread(updateLights());
     }
     public void setStatus(Status status) {
         this.status = status;
@@ -24,7 +24,7 @@ public class Driver {
     public int getDriverID() {
         return driverID;
     }
-
+/*
     private Runnable updateLights() {
         while(true) {
             switch (status) {
@@ -44,5 +44,5 @@ public class Driver {
             }
         }
     }
-
+ */
 }

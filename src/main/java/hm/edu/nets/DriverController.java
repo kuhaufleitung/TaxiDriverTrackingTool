@@ -30,7 +30,7 @@ public class DriverController {
         mapper = new ObjectMapper();
     }
 
-    @RequestMapping(value = "/driver/{id}", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public DriverRoute route(@PathVariable String id, @RequestBody String json) {
         ObjectNode input = null;
         try {
@@ -41,8 +41,22 @@ public class DriverController {
         data.with(id).put("depart", input.findValue("depart"));
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
-        return new DriverRoute(getCorrectDriver(id), json, json);
+        return new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
     }
+
+    @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public void status(@PathVariable String id, @RequestBody String json) {
+        ObjectNode input = null;
+        try {
+            input = mapper.readValue(json, new TypeReference<>(){});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        Status newStatus = Status.valueOf(input.findValue("status").asText());
+        data.with(id).put("status", newStatus.toString());
+        getDriver(id).setStatus(newStatus);
+    }
+
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
@@ -58,7 +72,7 @@ public class DriverController {
 
 
 
-    private Driver getCorrectDriver(String ID) {
+    private Driver getDriver(String ID) {
 
         return switch (Integer.parseInt(ID)) {
             case 1 -> drv1;
