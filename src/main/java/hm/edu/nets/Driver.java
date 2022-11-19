@@ -50,7 +50,7 @@ public class Driver {
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                System.err.println("Runtime Excep:" + e);
             }
         }
     }

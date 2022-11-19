@@ -1,23 +1,26 @@
 package hm.edu.nets.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import hm.edu.nets.Status;
 import hm.edu.nets.URI_Addresses;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 
 public class DriverClient {
     //ONLY REQUESTS HERE!
-    //TODO: can query status(avail, pause, with guest, with guest and delay)
     private final String driverID;
 
     public DriverClient(String driverID) {
@@ -38,15 +41,17 @@ public class DriverClient {
 
             switch (selection) {
                 case 1 -> {
+                    in.nextLine();
                     System.out.print("From: ");
-                    String startLoc = in.next();
+                    String startLoc = in.nextLine();
                     System.out.println();
                     System.out.print("To: ");
-                    String endLoc = in.next();
+                    String endLoc = in.nextLine();
 
-                    startRoute(startLoc, endLoc);
+                    //System.out.println(startRoute(startLoc, endLoc));
+                    startRoute(startLoc,endLoc);
                 }
-                case 2 -> System.out.println(getInformation());
+                case 2 -> getInformation();
                 case 3 -> {
                     delay();
                     System.out.println("Delay transmitted.");
@@ -69,7 +74,7 @@ public class DriverClient {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
         body.put("depart", departLoc).put("arrival", arrivalLoc);
-        sendRequest(body, "route");
+        sendPUTRequest(body, "route");
 
     }
 
@@ -86,19 +91,48 @@ public class DriverClient {
     }
 
     //TODO: time driven already, ttg request. Ausgabe current time + ttg +5min
-    private String getInformation() {
-        return null;
+    private void getInformation() {
+        try {
+            URL specific = new URL(URI_Addresses.ServerURI + "/" + driverID);
+            HttpURLConnection con = (HttpURLConnection) specific.openConnection();
+            BufferedReader br;
+            if (100 <= con.getResponseCode() && con.getResponseCode() <= 399) {
+                br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            } else {
+                br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+            }
+            StringBuilder sb = new StringBuilder();
+            String output;
+            while ((output = br.readLine()) != null) {
+                sb.append(output);
+            }
+
+            //Output to user
+            String completeJson = sb.toString();
+
+            ObjectMapper mapper = new ObjectMapper();
+            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
+            ObjectNode response = mapper.readValue(completeJson, new TypeReference<>(){});
+
+            ZonedDateTime departure = ZonedDateTime.parse(response.findValue("departure").asText(), formatter);
+            ZonedDateTime rightNow = ZonedDateTime.now();
+            ZonedDateTime arrival = ZonedDateTime.parse(response.findValue("arrival").asText(), formatter);
+            //TODO: Ausgabe von Zeit: aktuelle Zeit, vorraussichtl. Fahrzeit, 5min reserve -> Ankunftszeit
+        } catch (IOException e) {
+            System.err.println("Exception!: " + e);
+        }
     }
 
     private void setStatus(Status status) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
         body.put("status", status.toString());
-        sendRequest(body, "set");
+        sendPUTRequest(body, "set");
 
     }
 
-    private void sendRequest(ObjectNode body, String action) {
+    private void sendPUTRequest(ObjectNode body, String action) {
+        //TODO: void->String: Response for route
         URL specific;
         String buildURL = switch (action) {
             case "set" -> URI_Addresses.ServerURI + "/" + driverID + "/status";
@@ -108,12 +142,7 @@ public class DriverClient {
         try {
             assert buildURL != null;
             specific = new URL(buildURL);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-        HttpURLConnection con = null;
-        try {
-            con = (HttpURLConnection) specific.openConnection();
+            HttpURLConnection con = (HttpURLConnection) specific.openConnection();
             con.setRequestMethod("PUT");
             con.setRequestProperty("Content-Type", "application/json");
             con.setDoOutput(true);
@@ -126,6 +155,6 @@ public class DriverClient {
         } catch (IOException ex) {
             System.err.println("I/O Error. " + ex);
         }
-    }
 
+    }
 }

@@ -28,9 +28,9 @@ public class DriverController {
         mapper = new ObjectMapper();
     }
 
-    @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = {MediaType.APPLICATION_JSON_VALUE})
     public String route(@PathVariable String id, @RequestBody String json) {
-        ObjectNode input = null;
+        ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>(){});
         } catch (JsonProcessingException e) {
@@ -39,13 +39,13 @@ public class DriverController {
         data.with(id).put("depart", input.findValue("depart"));
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
-        new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
-        return "Driver route created...";
+        DriverRoute route = new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
+        return route.getRoute();
     }
 
-    @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = {MediaType.APPLICATION_JSON_VALUE})
     public String status(@PathVariable String id, @RequestBody String json) {
-        ObjectNode input = null;
+        ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>(){});
         } catch (JsonProcessingException e) {
@@ -56,7 +56,6 @@ public class DriverController {
         getDriver(id).setStatus(newStatus);
         return "Status set to " + newStatus;
     }
-
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
