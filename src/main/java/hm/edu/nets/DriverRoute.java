@@ -13,7 +13,7 @@ public class DriverRoute {
         this.driver = driver;
         driver.setStatus(Status.DRIVING);
         queryLocation(departureLocation, arrivalLocation);
-        new Thread(updateLights());
+        updateLights();
     }
 
     private void queryLocation(String departureLocation, String arrivalLocation) {
@@ -41,19 +41,16 @@ public class DriverRoute {
 
     }
 
-    private Runnable updateLights() {
-        int interval = 5000;
-        try {
-            switch (driver.getStatus()) {
-                case AVAILABLE -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.GREEN));
-                case DRIVING -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(URI_Addresses.HueURI, driver.getDriverID(), HueColor.YELLOW));
-                case ON_BREAK -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightOff(URI_Addresses.HueURI, driver.getDriverID()));
-                case DELAY -> RestCommunication.sendAndGetResponse(client, LightStateCommands.lightBlinking(URI_Addresses.HueURI, driver.getDriverID()));
-            }
-            Thread.sleep(interval);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+    private void updateLights() {
+        switch (driver.getStatus()) {
+            case AVAILABLE ->
+                    RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(driver.getDriverID(), HueColor.GREEN.toString()));
+            case DRIVING ->
+                    RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(driver.getDriverID(), HueColor.YELLOW.toString()));
+            case ON_BREAK ->
+                    RestCommunication.sendAndGetResponse(client, LightStateCommands.lightOff(driver.getDriverID()));
+            case DELAY ->
+                    RestCommunication.sendAndGetResponse(client, LightStateCommands.lightBlinking(URI_Addresses.HueURI, driver.getDriverID()));
         }
-        return null;
     }
 }
