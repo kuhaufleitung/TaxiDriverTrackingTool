@@ -22,7 +22,7 @@ public class LightStateCommands {
 
     static HttpRequest lightOff(int driverID) {
         String hostRequestPath = URI_Addresses.HueURI +  "/" + driverID + "/state";
-        JSONObject body = new JSONObject().put("bri", 0);
+        JSONObject body = new JSONObject().put("on", false).put("alert", "none");
         return HttpRequest.newBuilder()
                 .uri(URI.create(hostRequestPath))
                 .PUT(HttpRequest.BodyPublishers.ofString(body.toString()))
@@ -31,15 +31,19 @@ public class LightStateCommands {
 
     static HttpRequest lightColor(int driverID, int color) {
         String hostRequestPath = URI_Addresses.HueURI +  "/" + driverID + "/state";
-        JSONObject body = new JSONObject().put("hue", color);
+        JSONObject body = new JSONObject().put("hue", color).put("on", true).put("alert", "none");
         return HttpRequest.newBuilder()
                 .uri(URI.create(hostRequestPath))
                 .PUT(HttpRequest.BodyPublishers.ofString(body.toString()))
                 .build();
     }
 
-    static HttpRequest lightBlinking(String host, int driverID) {
-        JSONObject body = new JSONObject().put("alert", "select");
-        return null;
+    static HttpRequest lightBlinking(int driverID) {
+        String hostRequestPath = URI_Addresses.HueURI +  "/" + driverID + "/state";
+        JSONObject body = new JSONObject().put("alert", "select").put("on", true);
+        return HttpRequest.newBuilder()
+                .uri(URI.create(hostRequestPath))
+                .PUT(HttpRequest.BodyPublishers.ofString(body.toString()))
+                .build();
     }
 }

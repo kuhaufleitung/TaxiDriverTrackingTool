@@ -2,13 +2,16 @@ package hm.edu.nets;
 
 public class Driver {
     private Status status;
+    private Status oldStatus;
     private final int driverID;
 
     public Driver(int driverID) {
         status = Status.AVAILABLE;
         this.driverID = driverID;
+        RestCommunication.sendAndGetResponse(LightStateCommands.initLight(driverID));
         new Thread(this::updateLights).start();
     }
+
     public void setStatus(Status status) {
         this.status = status;
     }
@@ -22,16 +25,27 @@ public class Driver {
     }
 
     private void updateLights() {
-        while(true) {
-            switch (status) {
-                case AVAILABLE ->
+        while (true) {
+            if (oldStatus != status) {
+                switch (status) {
+                    case AVAILABLE -> {
                         RestCommunication.sendAndGetResponse(LightStateCommands.lightColor(driverID, HueColor.GREEN.color));
-                case DRIVING ->
+                        oldStatus = status;
+                    }
+                    case DRIVING -> {
                         RestCommunication.sendAndGetResponse(LightStateCommands.lightColor(driverID, HueColor.YELLOW.color));
-                case ON_BREAK ->
+                        oldStatus = status;
+                    }
+                    case ON_BREAK -> {
                         RestCommunication.sendAndGetResponse(LightStateCommands.lightOff(driverID));
-                case DELAY ->
-                        RestCommunication.sendAndGetResponse(LightStateCommands.lightBlinking(URI_Addresses.HueURI, driverID));
+                        oldStatus = status;
+                    }
+                    case DELAY -> {
+                        RestCommunication.sendAndGetResponse(LightStateCommands.lightBlinking(driverID));
+                        oldStatus = status;
+                    }
+
+                }
             }
             try {
                 Thread.sleep(5000);
