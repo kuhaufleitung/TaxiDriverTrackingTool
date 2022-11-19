@@ -1,17 +1,13 @@
 package hm.edu.nets;
 
-import java.net.http.HttpClient;
-
 public class Driver {
     private Status status;
     private final int driverID;
-    private final HttpClient client;
 
-    public Driver(int driverID, HttpClient client) {
-        this.client = client;
+    public Driver(int driverID) {
         status = Status.AVAILABLE;
         this.driverID = driverID;
-        //new Thread(updateLights());
+        new Thread(this::updateLights).start();
     }
     public void setStatus(Status status) {
         this.status = status;
@@ -24,18 +20,18 @@ public class Driver {
     public int getDriverID() {
         return driverID;
     }
-/*
-    private Runnable updateLights() {
+
+    private void updateLights() {
         while(true) {
             switch (status) {
                 case AVAILABLE ->
-                        RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(driverID, HueColor.GREEN.color));
+                        RestCommunication.sendAndGetResponse(LightStateCommands.lightColor(driverID, HueColor.GREEN.color));
                 case DRIVING ->
-                        RestCommunication.sendAndGetResponse(client, LightStateCommands.lightColor(driverID, HueColor.YELLOW.color));
+                        RestCommunication.sendAndGetResponse(LightStateCommands.lightColor(driverID, HueColor.YELLOW.color));
                 case ON_BREAK ->
-                        RestCommunication.sendAndGetResponse(client, LightStateCommands.lightOff(driverID));
+                        RestCommunication.sendAndGetResponse(LightStateCommands.lightOff(driverID));
                 case DELAY ->
-                        RestCommunication.sendAndGetResponse(client, LightStateCommands.lightBlinking(URI_Addresses.HueURI, driverID));
+                        RestCommunication.sendAndGetResponse(LightStateCommands.lightBlinking(URI_Addresses.HueURI, driverID));
             }
             try {
                 Thread.sleep(5000);
@@ -44,5 +40,4 @@ public class Driver {
             }
         }
     }
- */
 }

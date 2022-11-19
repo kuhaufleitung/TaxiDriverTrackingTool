@@ -9,15 +9,14 @@ public class RestCommunication {
     private RestCommunication() {
         throw new UnsupportedOperationException();
     }
-    public static String sendAndGetResponse(HttpClient client, HttpRequest request) {
+    public static void sendAndGetResponse(HttpRequest request) {
+        HttpClient client = HttpClient.newHttpClient();
         try {
-            return client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+            client.send(request, HttpResponse.BodyHandlers.ofString()).body();
         } catch (IOException e) {
             System.err.println("I/O Error!");
         } catch (InterruptedException e) {
             System.err.println("Something interrupted the ongoing operation.");
         }
-        return null;
     }
-
 }

@@ -124,7 +124,7 @@ public class DriverClient {
             os.close();
             System.out.println(con.getResponseCode());
         } catch (IOException ex) {
-            System.err.println("I/O Error.");
+            System.err.println("I/O Error. " + ex);
         }
     }
 

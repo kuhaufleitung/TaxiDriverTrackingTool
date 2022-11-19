@@ -13,14 +13,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.http.HttpClient;
-
 @RestController
 public class DriverController {
-    HttpClient HueClient = HttpClient.newHttpClient();
-    Driver drv1 = new Driver(1, HueClient);
-    Driver drv2 = new Driver(2, HueClient);
-    Driver drv3 = new Driver(3, HueClient);
+
+    Driver drv1 = new Driver(1);
+    Driver drv2 = new Driver(2);
+    Driver drv3 = new Driver(3);
     ObjectNode data = initJSONObject();
 
     @Autowired
@@ -31,7 +29,7 @@ public class DriverController {
     }
 
     @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public DriverRoute route(@PathVariable String id, @RequestBody String json) {
+    public String route(@PathVariable String id, @RequestBody String json) {
         ObjectNode input = null;
         try {
             input = mapper.readValue(json, new TypeReference<>(){});
@@ -41,11 +39,12 @@ public class DriverController {
         data.with(id).put("depart", input.findValue("depart"));
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
-        return new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
+        new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
+        return "Driver route created...";
     }
 
     @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public void status(@PathVariable String id, @RequestBody String json) {
+    public String status(@PathVariable String id, @RequestBody String json) {
         ObjectNode input = null;
         try {
             input = mapper.readValue(json, new TypeReference<>(){});
@@ -55,6 +54,7 @@ public class DriverController {
         Status newStatus = Status.valueOf(input.findValue("status").asText());
         data.with(id).put("status", newStatus.toString());
         getDriver(id).setStatus(newStatus);
+        return "Status set to " + newStatus;
     }
 
 
@@ -73,7 +73,6 @@ public class DriverController {
 
 
     private Driver getDriver(String ID) {
-
         return switch (Integer.parseInt(ID)) {
             case 1 -> drv1;
             case 2 -> drv2;
@@ -86,17 +85,6 @@ public class DriverController {
         ObjectMapper initMapper = new ObjectMapper();
         ObjectNode init = initMapper.createObjectNode();
         for (int i = 1; i <= 3; i++) {
-            /*
-            init.putArray(String.valueOf(i), mapper.createObjectNode()
-                            .put("status", Status.NOT_INIT.ordinal())
-                            .put("location", mapper.createObjectNode()
-                                    .put("lat", 0)
-                                    .put("lng", 0))
-                            .put("departure", 0)
-                            .put("arrival", 0)
-                            .put("ttg", 0))
-                    .put("passedTime", 0);
-*/
             init.putObject(String.valueOf(i))
                     .put("status", Status.NOT_INIT.toString())
                     .put("departure", "null")
