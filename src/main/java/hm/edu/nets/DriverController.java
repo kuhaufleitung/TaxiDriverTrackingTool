@@ -1,11 +1,15 @@
 package hm.edu.nets;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,18 +30,32 @@ public class DriverController {
         mapper = new ObjectMapper();
     }
 
-
-    @RequestMapping(value = "/driver", method = RequestMethod.PUT)
-    public DriverRoute route(@RequestParam(value = "id") String ID, @RequestParam(value = "depart") String depart, @RequestParam(value = "arrival") String arrival) {
-        //data.put(ID, new JSONObject().put("status", getCorrectDriver(ID).getStatus()));
-        return new DriverRoute(HueClient, getCorrectDriver(ID), depart, arrival);
+    @RequestMapping(value = "/driver/{id}", method = RequestMethod.PUT, consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public DriverRoute route(@PathVariable String id, @RequestBody String json) {
+        ObjectNode input = null;
+        try {
+            input = mapper.readValue(json, new TypeReference<>(){});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        data.with(id).put("depart", input.findValue("depart"));
+        data.with(id).put("arrival", input.findValue("arrival"));
+        data.with(id).put("status", Status.DRIVING.toString());
+        return new DriverRoute(HueClient, getCorrectDriver(id), json, json);
     }
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
-    public ObjectNode status() {
+    public ObjectNode statusAll() {
         return data;
     }
+
+    @RequestMapping(value = "/driver/{id}", method = RequestMethod.GET)
+    @ResponseBody
+    public ObjectNode status(@PathVariable String id) {
+        return data.with(id);
+    }
+
 
 
     private Driver getCorrectDriver(String ID) {
@@ -67,8 +85,8 @@ public class DriverController {
 */
             init.putObject(String.valueOf(i))
                     .put("status", Status.NOT_INIT.toString())
-                    .put("departure", 0)
-                    .put("arrival", 0)
+                    .put("departure", "null")
+                    .put("arrival", "null")
                     .put("ttg", 0)
                     .putObject("location")
                     .put("lat", 0)
