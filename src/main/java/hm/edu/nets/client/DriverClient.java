@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 public class DriverClient {
     //ONLY REQUESTS HERE!
     //TODO: can query status(avail, pause, with guest, with guest and delay)
-    private String driverID;
+    private final String driverID;
 
     public DriverClient(String driverID) {
         this.driverID = driverID;
@@ -31,7 +31,7 @@ public class DriverClient {
 
         URL specific;
         try {
-            specific = new URL(URI_Addresses.ServerURI.toString() + "/" + driverID);
+            specific = new URL(URI_Addresses.ServerURI + "/" + driverID);
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
@@ -43,13 +43,12 @@ public class DriverClient {
             con.setDoOutput(true);
             OutputStream os = con.getOutputStream();
             OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-            //osw.write(JSONObject.valueToString(body));
             osw.write(body.toString());
             osw.flush();
             os.close();
             System.out.println(con.getResponseCode());
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            System.err.println("I/O Error.");
         }
 
     }

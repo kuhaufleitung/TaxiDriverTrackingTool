@@ -11,9 +11,4 @@ public enum HueColor {
     HueColor(int color) {
         this.color = color;
     }
-
-    @Override
-    public String toString() {
-        return String.valueOf(color);
-    }
 }

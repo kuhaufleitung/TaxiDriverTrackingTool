@@ -18,9 +18,9 @@ import java.net.http.HttpClient;
 @RestController
 public class DriverController {
     HttpClient HueClient = HttpClient.newHttpClient();
-    Driver drv1 = new Driver(1);
-    Driver drv2 = new Driver(2);
-    Driver drv3 = new Driver(3);
+    Driver drv1 = new Driver(1, HueClient);
+    Driver drv2 = new Driver(2, HueClient);
+    Driver drv3 = new Driver(3, HueClient);
     ObjectNode data = initJSONObject();
 
     @Autowired
@@ -41,7 +41,7 @@ public class DriverController {
         data.with(id).put("depart", input.findValue("depart"));
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
-        return new DriverRoute(HueClient, getCorrectDriver(id), json, json);
+        return new DriverRoute(getCorrectDriver(id), json, json);
     }
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
