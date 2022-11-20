@@ -4,16 +4,19 @@ public class Driver {
     private Status status;
     private Status oldStatus;
     private final int driverID;
+    private final JSONData driverData;
 
-    public Driver(int driverID) {
+    public Driver(int driverID, JSONData driverData) {
         status = Status.AVAILABLE;
         this.driverID = driverID;
+        this.driverData = driverData;
         RestCommunication.sendAndGetResponse(LightStateCommands.initLight(driverID));
         new Thread(this::updateLights).start();
     }
 
     public void setStatus(Status status) {
         this.status = status;
+        driverData.data.with(String.valueOf(driverID)).put("status", status.toString());
     }
 
     public Status getStatus() {

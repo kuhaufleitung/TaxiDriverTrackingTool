@@ -16,17 +16,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Scanner;
 
 
 public class DriverClient {
-    //ONLY REQUESTS HERE!
     private final String driverID;
     private String JSONRouteResponse;
-    private ZonedDateTime departure;
-    private ZonedDateTime rightNow;
-    private ZonedDateTime arrival;
+    private ZonedDateTime departureAt;
+    private ZonedDateTime arrivalAt;
 
     public DriverClient(String driverID) {
         this.driverID = driverID;
@@ -39,7 +37,7 @@ public class DriverClient {
                     (3):     Status: Delay
                     (4):     Status: Available
                     (5):     Status: Taking a break
-                    (6):     Exit CLient
+                    (6):     Exit Client
                     """);
             System.out.print("Selection: ");
             int selection = in.nextInt();
@@ -52,9 +50,14 @@ public class DriverClient {
                     System.out.println();
                     System.out.print("To: ");
                     String endLoc = in.nextLine();
-                    System.out.println(startRoute(startLoc,endLoc));
+                    startRoute(startLoc, endLoc);
+                    parseRouteResponse();
                 }
-                case 2 -> getResponseFromServer();
+                case 2 -> {
+                    JSONRouteResponse = sendGETRequest();
+                    parseRouteResponse();
+                    displayInformation();
+                }
                 case 3 -> {
                     delay();
                     System.out.println("Delay transmitted.");
@@ -73,13 +76,12 @@ public class DriverClient {
         }
     }
 
-    private String startRoute(String departLoc, String arrivalLoc) {
+    private void startRoute(String departLoc, String arrivalLoc) {
+        //TODO: evtl 200 return
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
         body.put("departure", departLoc).put("arrival", arrivalLoc);
         JSONRouteResponse = sendPUTRequest(body, "route");
-        return JSONRouteResponse;
-
     }
 
     private void delay() {
@@ -94,8 +96,7 @@ public class DriverClient {
         setStatus(Status.AVAILABLE);
     }
 
-    //TODO: time driven already, ttg request. Ausgabe current time + ttg +5min
-    private String getResponseFromServer() {
+    private String sendGETRequest() {
         try {
             URL specific = new URL(URI_Addresses.ServerURI + "/" + driverID);
             HttpURLConnection con = (HttpURLConnection) specific.openConnection();
@@ -110,21 +111,11 @@ public class DriverClient {
             while ((output = br.readLine()) != null) {
                 sb.append(output);
             }
-            //Output to user
             return sb.toString();
-            //TODO: Ausgabe von Zeit: aktuelle Zeit, vorraussichtl. Fahrzeit, 5min reserve -> Ankunftszeit
         } catch (IOException e) {
             System.err.println("Exception!: " + e);
         }
         return null;
-    }
-
-    private void setStatus(Status status) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode body = mapper.createObjectNode();
-        body.put("status", status.toString());
-        sendPUTRequest(body, "set");
-
     }
 
     private String sendPUTRequest(ObjectNode body, String action) {
@@ -147,28 +138,60 @@ public class DriverClient {
             osw.flush();
             os.close();
             System.out.println(con.getResponseCode());
-            return getResponseFromServer();
+            return sendGETRequest();
         } catch (IOException ex) {
             System.err.println("I/O Error. " + ex);
         }
         return null;
     }
-    private void parseRouteRespose() {
-        if(JSONRouteResponse.isEmpty()) {
-            System.out.println("Response is empty!");
+
+    private void setStatus(Status status) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode body = mapper.createObjectNode();
+        body.put("status", status.toString());
+        sendPUTRequest(body, "set");
+
+    }
+
+    private void parseRouteResponse() {
+        ObjectMapper mapper = new ObjectMapper();
+        //TODO: Eval if Formatter necessary
+        //final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
+        ObjectNode response;
+        try {
+                response = mapper.readValue(JSONRouteResponse, new TypeReference<>() {
+                });
+                if (response.findValue("departureAt").asText().equals("0") || response.findValue("arrivalAt").asText().equals("0")) {
+                    return;
+                }
+                departureAt = ZonedDateTime.parse(response.findValue("departureAt").asText());
+                arrivalAt = ZonedDateTime.parse(response.findValue("arrivalAt").asText());
+        } catch (JsonProcessingException e) {
+            System.err.println("Couldnt find departureAt or arrivalAt entries! " + e);
+        }
+    }
+
+    private void displayInformation() {
+        if (JSONRouteResponse.contains("NOT_INIT")) {
+            System.out.println("No route set!");
             return;
         }
-        ObjectMapper mapper = new ObjectMapper();
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
-        ObjectNode response = null;
-        try {
-            response = mapper.readValue(JSONRouteResponse, new TypeReference<>(){});
-            departure = ZonedDateTime.parse(response.findValue("departure").asText(), formatter);
-            rightNow = ZonedDateTime.now();
-            arrival = ZonedDateTime.parse(response.findValue("arrival").asText(), formatter);
+        ChronoUnit unit = ChronoUnit.MINUTES;
+        ZonedDateTime now = ZonedDateTime.now();
 
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        //verstrichene Zeit
+        long timeDrivenAlready = Math.abs(unit.between(now, departureAt));
+        //TTG
+        long timeToGo = Math.abs(unit.between(arrivalAt, now));
+
+
+        //Ankunftszeit
+        int arrivalHour = arrivalAt.getHour();
+        int arrivalMinute = arrivalAt.getMinute();
+
+        System.out.println("Time passed since start: " + timeDrivenAlready + "min");
+        System.out.println("Time until arrival: " + timeToGo + "min" + " (including 5min buffer)");
+        System.out.println("Clock at arrival: " + arrivalHour + ":" + arrivalMinute + " eventual 5mins on top");
+
     }
 }

@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -17,17 +18,24 @@ public class DriverRoute {
     private final String route;
     private ZonedDateTime departure;
     private ZonedDateTime arrival;
+    private final JSONData data;
+    public boolean isRouteActive;
     private static final String API_KEY = "wiMfx6EU3WKC_1nwth9MxE8Sgh1DcvRcj9uR76T5h3E";
 
-    public DriverRoute(Driver driver, String departureLocation, String arrivalLocation) {
+    public DriverRoute(Driver driver, String departureLocation, String arrivalLocation, JSONData data) {
         this.driver = driver;
+        this.data = data;
         driver.setStatus(Status.DRIVING);
-        this.route = queryRoute(departureLocation, arrivalLocation);
+        this.route = queryRouteFromAPI(departureLocation, arrivalLocation);
+        departure = setDepartureTimeFromJSON();
+        arrival = setArrivalTimeFromJSON();
+        isRouteActive = true;
+        new Thread(this::updateCurrentDrive).start();
     }
 
-    private String queryRoute(String departureLocation, String arrivalLocation) {
-        HashMap<String, String> startCoordinates = getCoordinates(departureLocation);
-        HashMap<String, String> endCoordinates = getCoordinates(arrivalLocation);
+    private String queryRouteFromAPI(String departureLocation, String arrivalLocation) {
+        HashMap<String, String> startCoordinates = getCoordinatesFromAPI(departureLocation);
+        HashMap<String, String> endCoordinates = getCoordinatesFromAPI(arrivalLocation);
         String query = URI_Addresses.HERE_Routing
                 + "?transportMode=car&origin="
                 + startCoordinates.get("lat")
@@ -44,7 +52,7 @@ public class DriverRoute {
 
     }
 
-    private HashMap<String, String> getCoordinates(String location) {
+    private HashMap<String, String> getCoordinatesFromAPI(String location) {
         location = location.replace(" ", "+");
         String query = URI_Addresses.HERE_Geocode + "?q=" + location + "&apiKey=" + API_KEY;
         try {
@@ -72,7 +80,7 @@ public class DriverRoute {
         driver.setStatus(Status.DELAY);
     }
 
-    public ZonedDateTime readDepartureTimeFromJSON() {
+    public ZonedDateTime setDepartureTimeFromJSON() {
         try {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
@@ -83,7 +91,7 @@ public class DriverRoute {
         }
     }
 
-    public ZonedDateTime readArrivalTimeFromJSON() {
+    public ZonedDateTime setArrivalTimeFromJSON() {
         try {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
@@ -94,15 +102,42 @@ public class DriverRoute {
         }
     }
 
-    public int reportLocation() {
-        return 0;
+    public ZonedDateTime getDepartureTime() {
+        return departure;
+    }
+
+    public ZonedDateTime getArrivalTime() {
+        return arrival;
     }
 
     public void cancelRide() {
 
     }
 
-    public void update() {
+    //existing buffer of 5min
+    public void updateCurrentDrive() {
+        ZonedDateTime safetyMarginAdded = arrival.plus(5, ChronoUnit.MINUTES);
+        while (driver.getStatus() == Status.DRIVING) {
+            if (ZonedDateTime.now().isAfter(safetyMarginAdded)) {
+                driver.setStatus(Status.AVAILABLE);
+                isRouteActive = false;
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    //Adding 5min safety margin to ttg
+    public long getTTG() {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime finish = getArrivalTime().plus(5, ChronoUnit.MINUTES);
+        ChronoUnit unit = ChronoUnit.MINUTES;
+        return unit.between(now, finish);
+    }
 
+    public void updateTTG() {
+        data.data.with(String.valueOf(driver.getDriverID())).put("ttg", getTTG());
     }
 }
