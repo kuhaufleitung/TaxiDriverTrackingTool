@@ -76,7 +76,7 @@ public class DriverRoute {
         try {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
-            String departure = json.with("routes").get(0).with("sections").get(0).with("departure").get("time").asText();
+            String departure = json.get("routes").get(0).get("sections").get(0).get("departure").get("time").asText();
             return ZonedDateTime.parse(departure);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -87,7 +87,7 @@ public class DriverRoute {
         try {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
-            String departure = json.with("routes").get(0).with("sections").get(0).with("arrival").get("time").asText();
+            String departure = json.get("routes").get(0).get("sections").get(0).get("arrival").get("time").asText();
             return ZonedDateTime.parse(departure);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

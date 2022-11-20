@@ -40,10 +40,10 @@ public class DriverController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        data.with(id).put("depart", input.findValue("depart"));
+        data.with(id).put("departure", input.findValue("departure"));
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
-        DriverRoute route = new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
+        DriverRoute route = new DriverRoute(getDriver(id), input.findValue("departure").asText(), input.findValue("arrival").asText());
         HashMap<String, ZonedDateTime> timestamps = new HashMap<>();
         timestamps.put("departure", route.readDepartureTimeFromJSON());
         timestamps.put("arrival", route.readArrivalTimeFromJSON());

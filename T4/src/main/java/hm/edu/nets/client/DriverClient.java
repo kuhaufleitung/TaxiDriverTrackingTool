@@ -76,7 +76,7 @@ public class DriverClient {
     private String startRoute(String departLoc, String arrivalLoc) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
-        body.put("depart", departLoc).put("arrival", arrivalLoc);
+        body.put("departure", departLoc).put("arrival", arrivalLoc);
         JSONRouteResponse = sendPUTRequest(body, "route");
         return JSONRouteResponse;
 

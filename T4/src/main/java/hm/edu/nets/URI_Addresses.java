@@ -5,7 +5,7 @@ import java.net.URI;
 
 public record URI_Addresses() {
     //Emulator
-    public final static String HueURI = "http://localhost:80/api/newdeveloper/lights";
+    public final static String HueURI = "http://localhost:8000/api/newdeveloper/lights";
     //Bridge1
     // public final static String HueURI = "http://10.28.9.120/api/197ea42c25303cef1a68c4042ed56887/lights/";
     //Bridge2
