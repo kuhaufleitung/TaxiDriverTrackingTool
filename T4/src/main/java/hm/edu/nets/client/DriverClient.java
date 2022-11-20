@@ -1,5 +1,6 @@
 package hm.edu.nets.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -22,6 +23,10 @@ import java.util.Scanner;
 public class DriverClient {
     //ONLY REQUESTS HERE!
     private final String driverID;
+    private String JSONRouteResponse;
+    private ZonedDateTime departure;
+    private ZonedDateTime rightNow;
+    private ZonedDateTime arrival;
 
     public DriverClient(String driverID) {
         this.driverID = driverID;
@@ -38,20 +43,18 @@ public class DriverClient {
                     """);
             System.out.print("Selection: ");
             int selection = in.nextInt();
+            in.nextLine();
 
             switch (selection) {
                 case 1 -> {
-                    in.nextLine();
                     System.out.print("From: ");
                     String startLoc = in.nextLine();
                     System.out.println();
                     System.out.print("To: ");
                     String endLoc = in.nextLine();
-
-                    //System.out.println(startRoute(startLoc, endLoc));
-                    startRoute(startLoc,endLoc);
+                    System.out.println(startRoute(startLoc,endLoc));
                 }
-                case 2 -> getInformation();
+                case 2 -> getResponseFromServer();
                 case 3 -> {
                     delay();
                     System.out.println("Delay transmitted.");
@@ -70,11 +73,12 @@ public class DriverClient {
         }
     }
 
-    private void startRoute(String departLoc, String arrivalLoc) {
+    private String startRoute(String departLoc, String arrivalLoc) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
         body.put("depart", departLoc).put("arrival", arrivalLoc);
-        sendPUTRequest(body, "route");
+        JSONRouteResponse = sendPUTRequest(body, "route");
+        return JSONRouteResponse;
 
     }
 
@@ -91,7 +95,7 @@ public class DriverClient {
     }
 
     //TODO: time driven already, ttg request. Ausgabe current time + ttg +5min
-    private void getInformation() {
+    private String getResponseFromServer() {
         try {
             URL specific = new URL(URI_Addresses.ServerURI + "/" + driverID);
             HttpURLConnection con = (HttpURLConnection) specific.openConnection();
@@ -106,21 +110,13 @@ public class DriverClient {
             while ((output = br.readLine()) != null) {
                 sb.append(output);
             }
-
             //Output to user
-            String completeJson = sb.toString();
-
-            ObjectMapper mapper = new ObjectMapper();
-            final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
-            ObjectNode response = mapper.readValue(completeJson, new TypeReference<>(){});
-
-            ZonedDateTime departure = ZonedDateTime.parse(response.findValue("departure").asText(), formatter);
-            ZonedDateTime rightNow = ZonedDateTime.now();
-            ZonedDateTime arrival = ZonedDateTime.parse(response.findValue("arrival").asText(), formatter);
+            return sb.toString();
             //TODO: Ausgabe von Zeit: aktuelle Zeit, vorraussichtl. Fahrzeit, 5min reserve -> Ankunftszeit
         } catch (IOException e) {
             System.err.println("Exception!: " + e);
         }
+        return null;
     }
 
     private void setStatus(Status status) {
@@ -131,8 +127,7 @@ public class DriverClient {
 
     }
 
-    private void sendPUTRequest(ObjectNode body, String action) {
-        //TODO: void->String: Response for route
+    private String sendPUTRequest(ObjectNode body, String action) {
         URL specific;
         String buildURL = switch (action) {
             case "set" -> URI_Addresses.ServerURI + "/" + driverID + "/status";
@@ -152,9 +147,28 @@ public class DriverClient {
             osw.flush();
             os.close();
             System.out.println(con.getResponseCode());
+            return getResponseFromServer();
         } catch (IOException ex) {
             System.err.println("I/O Error. " + ex);
         }
+        return null;
+    }
+    private void parseRouteRespose() {
+        if(JSONRouteResponse.isEmpty()) {
+            System.out.println("Response is empty!");
+            return;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
+        ObjectNode response = null;
+        try {
+            response = mapper.readValue(JSONRouteResponse, new TypeReference<>(){});
+            departure = ZonedDateTime.parse(response.findValue("departure").asText(), formatter);
+            rightNow = ZonedDateTime.now();
+            arrival = ZonedDateTime.parse(response.findValue("arrival").asText(), formatter);
 
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

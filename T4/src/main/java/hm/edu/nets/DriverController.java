@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+
 @RestController
 public class DriverController {
 
@@ -28,8 +31,9 @@ public class DriverController {
         mapper = new ObjectMapper();
     }
 
-    @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public String route(@PathVariable String id, @RequestBody String json) {
+    @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public HashMap<String, ZonedDateTime> route(@PathVariable String id, @RequestBody String json) {
         ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>(){});
@@ -40,10 +44,13 @@ public class DriverController {
         data.with(id).put("arrival", input.findValue("arrival"));
         data.with(id).put("status", Status.DRIVING.toString());
         DriverRoute route = new DriverRoute(getDriver(id), input.findValue("depart").asText(), input.findValue("arrival").asText());
-        return route.getRoute();
+        HashMap<String, ZonedDateTime> timestamps = new HashMap<>();
+        timestamps.put("departure", route.readDepartureTimeFromJSON());
+        timestamps.put("arrival", route.readArrivalTimeFromJSON());
+        return timestamps;
     }
 
-    @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
     public String status(@PathVariable String id, @RequestBody String json) {
         ObjectNode input;
         try {

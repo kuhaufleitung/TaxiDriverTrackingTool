@@ -8,13 +8,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Objects;
 
 public class DriverRoute {
-    private String currentPosition;
     private final Driver driver;
     private final String route;
+    private ZonedDateTime departure;
+    private ZonedDateTime arrival;
     private static final String API_KEY = "wiMfx6EU3WKC_1nwth9MxE8Sgh1DcvRcj9uR76T5h3E";
 
     public DriverRoute(Driver driver, String departureLocation, String arrivalLocation) {
@@ -70,8 +72,26 @@ public class DriverRoute {
         driver.setStatus(Status.DELAY);
     }
 
-    public int getTimeToArrival() {
-        return 0; //Integer.parseInt(arrivalLocation) - Integer.parseInt(currentPosition);
+    public ZonedDateTime readDepartureTimeFromJSON() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
+            String departure = json.with("routes").get(0).with("sections").get(0).with("departure").get("time").asText();
+            return ZonedDateTime.parse(departure);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ZonedDateTime readArrivalTimeFromJSON() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
+            String departure = json.with("routes").get(0).with("sections").get(0).with("arrival").get("time").asText();
+            return ZonedDateTime.parse(departure);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public int reportLocation() {
