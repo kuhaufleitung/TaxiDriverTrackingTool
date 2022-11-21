@@ -110,7 +110,13 @@ public class DriverRoute {
     }
 
     public void cancelRide() {
-
+        isRouteActive = false;
+        data.data.with(String.valueOf(driver.getDriverID())).put("departure", "None");
+        data.data.with(String.valueOf(driver.getDriverID())).put("arrival", "None");
+        data.data.with(String.valueOf(driver.getDriverID())).put("departureAt", 0);
+        data.data.with(String.valueOf(driver.getDriverID())).put("arrivalAt", 0);
+        data.data.with(String.valueOf(driver.getDriverID())).put("ttg", "0");
+        driver.setStatus(Status.AVAILABLE);
     }
 
     //existing buffer of 5min

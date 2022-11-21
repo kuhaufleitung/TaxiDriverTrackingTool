@@ -35,7 +35,7 @@ public class DriverClient {
                     (1):     start new route
                     (2):     output current information
                     (3):     update my position
-                    (4):     Status: Available
+                    (4):     Status: Available (Cancel Ride)
                     (5):     Status: Taking a break
                     (6):     Exit Client
                     """);
@@ -65,14 +65,10 @@ public class DriverClient {
                 }
                 case 4 -> {
                     available();
-                    //TODO: cancelRide
-
                     System.out.println("Now Available.");
                 }
                 case 5 -> {
                     pause();
-                    //TODO: cancelRide
-
                     System.out.println("Go eat a burger.");
                 }
                 case 6 -> System.exit(0);
@@ -90,12 +86,12 @@ public class DriverClient {
 
     private void pause() {
         setStatus(Status.ON_BREAK);
-        //TODO: fahrt abbrechen
     }
 
     private void available() {
-        //TODO: fahrt abbrechen
-        setStatus(Status.AVAILABLE);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode body = mapper.createObjectNode();
+        JSONRouteResponse = sendPUTRequest(body, "cancel");
     }
 
     private String sendGETRequest() {
@@ -126,6 +122,7 @@ public class DriverClient {
             case "set" -> URI_Addresses.ServerURI + "/" + driverID + "/status";
             case "route" -> URI_Addresses.ServerURI + "/" + driverID + "/route";
             case "update" -> URI_Addresses.ServerURI + "/" + driverID + "/update";
+            case "cancel" -> URI_Addresses.ServerURI + "/" + driverID + "/cancel";
             case default -> null;
         };
         try {

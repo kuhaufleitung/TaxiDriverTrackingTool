@@ -66,6 +66,7 @@ public class DriverController {
     }
 
     @RequestMapping(value = "/driver/{id}/update", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
     public String update(@PathVariable String id, @RequestBody String json) {
         ObjectNode input;
         try {
@@ -83,8 +84,29 @@ public class DriverController {
         };
         currentRoute.evaluateNewDriverLocation(dataInst.parseNewLocationFromJSON(input));
         return currentRoute.driver.getStatus() == Status.DELAY ? "Cant reach destination in time, delay set.\n New arrival time: " + currentRoute.getArrivalTime() : "Still in time.";
-
     }
+
+    @RequestMapping(value = "/driver/{id}/cancel", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public String cancel(@PathVariable String id, @RequestBody String json) {
+        ObjectNode input;
+        try {
+            input = mapper.readValue(json, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        DriverRoute currentRoute;
+        currentRoute = switch (id) {
+            case "1" -> routeDrv1;
+            case "2" -> routeDrv2;
+            case "3" -> routeDrv3;
+            default -> throw new IllegalStateException("Unexpected value: " + id);
+        };
+        currentRoute.cancelRide();
+        return "Ride canceled.";
+    }
+
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
