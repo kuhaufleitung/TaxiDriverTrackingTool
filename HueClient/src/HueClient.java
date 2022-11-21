@@ -12,11 +12,11 @@ public class HueClient {
         final String lightID = args[0];
         final String lightingMode = args[1];
         final boolean showLightState = Boolean.parseBoolean(args[2]);
-        final String hue;
+        final int hue;
         if (args[1].equalsIgnoreCase("linear")) {
-            hue = args[3];
+            hue = Integer.parseInt(args[3]);
         } else {
-            hue = String.valueOf(-1);
+            hue = -1;
         }
         try {
             new HueRestControl(lightID, lightingMode, showLightState, hue);

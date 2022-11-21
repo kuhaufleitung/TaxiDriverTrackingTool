@@ -8,7 +8,7 @@ import java.net.http.HttpResponse;
 
 public class HueRestControl {
     //Emulator
-    URI hostURI = URI.create("http://localhost:80/api/newdeveloper/lights/");
+    //URI hostURI = URI.create("http://localhost:80/api/newdeveloper/lights/");
     //Bridge1
     // URI hostURI = URI.create("http://10.28.9.120/api/197ea42c25303cef1a68c4042ed56887/lights/");
     //Bridge2
@@ -17,12 +17,13 @@ public class HueRestControl {
     // URI hostURI = URI.create("http://10.28.9.122/api/2217334838210e7f244460f83b42026f/lights/");
     //Bridge4
     // URI hostURI = URI.create("http://10.28.9.123/api/2b2d3ff23d63751f10c1d8c0332d50ff/lights/");
+     URI hostURI = URI.create("http://10.28.209.13:9001/api/3dc1d8f23e55321f3c049c03ac88dff/lights/");
     private final int amountOfLights;
     final private String lightID;
-    final private String hue;
+    final private int hue;
     HttpClient client;
 
-    public HueRestControl(String lightID, String programMode, boolean state, String hue) throws InterruptedException {
+    public HueRestControl(String lightID, String programMode, boolean state, int hue) throws InterruptedException {
         this.lightID = lightID;
         this.hue = hue;
         client = HttpClient.newHttpClient();
@@ -103,7 +104,8 @@ public class HueRestControl {
                         .uri(hostURI.resolve("./" + i + "/state"))
                         .PUT(HttpRequest.BodyPublishers.ofString(body))
                         .build();
-                sendAndGetResponse(request);
+                System.out.println(sendAndGetResponse(request));
+                System.out.println(request);
             }
         }
         return null;
