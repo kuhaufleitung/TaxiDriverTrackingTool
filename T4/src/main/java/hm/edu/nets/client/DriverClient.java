@@ -34,7 +34,7 @@ public class DriverClient {
                                         
                     (1):     start new route
                     (2):     output current information
-                    (3):     Status: Delay
+                    (3):     update my position
                     (4):     Status: Available
                     (5):     Status: Taking a break
                     (6):     Exit Client
@@ -59,8 +59,9 @@ public class DriverClient {
                     displayInformation();
                 }
                 case 3 -> {
-                    delay();
-                    System.out.println("Delay transmitted.");
+                    System.out.println("current Location: ");
+                    String currentLoc = in.nextLine();
+                    reportNewLocation(currentLoc);
                 }
                 case 4 -> {
                     available();
@@ -77,22 +78,19 @@ public class DriverClient {
     }
 
     private void startRoute(String departLoc, String arrivalLoc) {
-        //TODO: evtl 200 return
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode body = mapper.createObjectNode();
         body.put("departure", departLoc).put("arrival", arrivalLoc);
         JSONRouteResponse = sendPUTRequest(body, "route");
     }
 
-    private void delay() {
-        setStatus(Status.DELAY);
-    }
-
     private void pause() {
         setStatus(Status.ON_BREAK);
+        //TODO: fahrt abbrechen
     }
 
     private void available() {
+        //TODO: fahrt abbrechen
         setStatus(Status.AVAILABLE);
     }
 
@@ -123,6 +121,7 @@ public class DriverClient {
         String buildURL = switch (action) {
             case "set" -> URI_Addresses.ServerURI + "/" + driverID + "/status";
             case "route" -> URI_Addresses.ServerURI + "/" + driverID + "/route";
+            case "update" -> URI_Addresses.ServerURI + "/" + driverID + "/update";
             case default -> null;
         };
         try {
@@ -155,8 +154,6 @@ public class DriverClient {
 
     private void parseRouteResponse() {
         ObjectMapper mapper = new ObjectMapper();
-        //TODO: Eval if Formatter necessary
-        //final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss a z");
         ObjectNode response;
         try {
                 response = mapper.readValue(JSONRouteResponse, new TypeReference<>() {
@@ -193,5 +190,15 @@ public class DriverClient {
         System.out.println("Time until arrival: " + timeToGo + "min" + " (including 5min buffer)");
         System.out.println("Clock at arrival: " + arrivalHour + ":" + arrivalMinute + " eventual 5mins on top");
 
+    }
+
+    private String reportNewLocation(String newLocation) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode body = mapper.createObjectNode();
+        body.put("departure", newLocation);
+        sendPUTRequest(body, "update");
+        String response = sendGETRequest();
+        //TODO: parse response -> switch sout
+        return response;
     }
 }

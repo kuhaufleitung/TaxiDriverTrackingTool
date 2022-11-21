@@ -16,8 +16,9 @@ import java.util.Objects;
 public class DriverRoute {
     private final Driver driver;
     private final String route;
-    private ZonedDateTime departure;
-    private ZonedDateTime arrival;
+    private String currentLocation;
+    private ZonedDateTime departureTime;
+    private ZonedDateTime arrivalTime;
     private final JSONData data;
     public boolean isRouteActive;
     private static final String API_KEY = "wiMfx6EU3WKC_1nwth9MxE8Sgh1DcvRcj9uR76T5h3E";
@@ -27,8 +28,8 @@ public class DriverRoute {
         this.data = data;
         driver.setStatus(Status.DRIVING);
         this.route = queryRouteFromAPI(departureLocation, arrivalLocation);
-        departure = setDepartureTimeFromJSON();
-        arrival = setArrivalTimeFromJSON();
+        departureTime = setDepartureTimeFromJSON();
+        arrivalTime = setArrivalTimeFromJSON();
         isRouteActive = true;
         new Thread(this::updateCurrentDrive).start();
     }
@@ -105,11 +106,11 @@ public class DriverRoute {
     }
 
     public ZonedDateTime getDepartureTime() {
-        return departure;
+        return departureTime;
     }
 
     public ZonedDateTime getArrivalTime() {
-        return arrival;
+        return arrivalTime;
     }
 
     public void cancelRide() {
@@ -118,8 +119,9 @@ public class DriverRoute {
 
     //existing buffer of 5min
     public void updateCurrentDrive() {
-        ZonedDateTime safetyMarginAdded = arrival.plus(5, ChronoUnit.MINUTES);
+        ZonedDateTime safetyMarginAdded = arrivalTime.plus(5, ChronoUnit.MINUTES);
         while (driver.getStatus() == Status.DRIVING) {
+            //TODO: update departuretime in json and here -> eval if late
             if (ZonedDateTime.now().isAfter(safetyMarginAdded)) {
                 driver.setStatus(Status.AVAILABLE);
                 isRouteActive = false;

@@ -68,6 +68,21 @@ public class DriverController {
         return "Status set to " + newStatus;
     }
 
+    @RequestMapping(value = "/driver/{id}/update", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public String update(@PathVariable String id, @RequestBody String json) {
+        ObjectNode input;
+        try {
+            input = mapper.readValue(json, new TypeReference<>() {
+            });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        //TODO: process location request
+        Status newStatus = Status.valueOf(input.findValue("status").asText());
+        getDriver(id).setStatus(newStatus);
+        return "Status set to " + newStatus;
+    }
+
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
     public ObjectNode statusAll() {
