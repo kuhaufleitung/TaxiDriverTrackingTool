@@ -83,7 +83,8 @@ public class DriverRoute {
     public ZonedDateTime setDepartureTimeFromJSON() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
+            ObjectNode json = mapper.readValue(route, new TypeReference<>() {
+            });
             String departure = json.get("routes").get(0).get("sections").get(0).get("departure").get("time").asText();
             return ZonedDateTime.parse(departure);
         } catch (JsonProcessingException e) {
@@ -94,7 +95,8 @@ public class DriverRoute {
     public ZonedDateTime setArrivalTimeFromJSON() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            ObjectNode json = mapper.readValue(route, new TypeReference<>() {});
+            ObjectNode json = mapper.readValue(route, new TypeReference<>() {
+            });
             String departure = json.get("routes").get(0).get("sections").get(0).get("arrival").get("time").asText();
             return ZonedDateTime.parse(departure);
         } catch (JsonProcessingException e) {
@@ -121,6 +123,8 @@ public class DriverRoute {
             if (ZonedDateTime.now().isAfter(safetyMarginAdded)) {
                 driver.setStatus(Status.AVAILABLE);
                 isRouteActive = false;
+                data.data.with(String.valueOf(driver.getDriverID())).put("departure", "None");
+                data.data.with(String.valueOf(driver.getDriverID())).put("arrival", "None");
             }
             try {
                 Thread.sleep(5000);
@@ -129,6 +133,7 @@ public class DriverRoute {
             }
         }
     }
+
     //Adding 5min safety margin to ttg
     public long getTTG() {
         ZonedDateTime now = ZonedDateTime.now();

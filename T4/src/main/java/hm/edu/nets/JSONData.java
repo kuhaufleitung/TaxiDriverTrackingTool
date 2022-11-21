@@ -16,8 +16,8 @@ public class JSONData {
         for (int i = 1; i <= 3; i++) {
             data.putObject(String.valueOf(i))
                     .put("status", Status.NOT_INIT.toString())
-                    .put("departure", "null")
-                    .put("arrival", "null")
+                    .put("departure", "None")
+                    .put("arrival", "None")
                     //.putObject("location")
                     .put("departureAt", 0)
                     .put("arrivalAt", 0)
