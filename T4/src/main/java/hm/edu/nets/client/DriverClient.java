@@ -61,14 +61,18 @@ public class DriverClient {
                 case 3 -> {
                     System.out.println("current Location: ");
                     String currentLoc = in.nextLine();
-                    reportNewLocation(currentLoc);
+                    System.out.println(reportNewLocation(currentLoc));
                 }
                 case 4 -> {
                     available();
+                    //TODO: cancelRide
+
                     System.out.println("Now Available.");
                 }
                 case 5 -> {
                     pause();
+                    //TODO: cancelRide
+
                     System.out.println("Go eat a burger.");
                 }
                 case 6 -> System.exit(0);
@@ -156,13 +160,13 @@ public class DriverClient {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode response;
         try {
-                response = mapper.readValue(JSONRouteResponse, new TypeReference<>() {
-                });
-                if (response.findValue("departureAt").asText().equals("0") || response.findValue("arrivalAt").asText().equals("0")) {
-                    return;
-                }
-                departureAt = ZonedDateTime.parse(response.findValue("departureAt").asText());
-                arrivalAt = ZonedDateTime.parse(response.findValue("arrivalAt").asText());
+            response = mapper.readValue(JSONRouteResponse, new TypeReference<>() {
+            });
+            if (response.findValue("departureAt").asText().equals("0") || response.findValue("arrivalAt").asText().equals("0")) {
+                return;
+            }
+            departureAt = ZonedDateTime.parse(response.findValue("departureAt").asText());
+            arrivalAt = ZonedDateTime.parse(response.findValue("arrivalAt").asText());
         } catch (JsonProcessingException e) {
             System.err.println("Couldnt find departureAt or arrivalAt entries! " + e);
         }
@@ -189,7 +193,6 @@ public class DriverClient {
         System.out.println("Time passed since start: " + timeDrivenAlready + "min");
         System.out.println("Time until arrival: " + timeToGo + "min" + " (including 5min buffer)");
         System.out.println("Clock at arrival: " + arrivalHour + ":" + arrivalMinute + " eventual 5mins on top");
-
     }
 
     private String reportNewLocation(String newLocation) {
@@ -197,8 +200,6 @@ public class DriverClient {
         ObjectNode body = mapper.createObjectNode();
         body.put("departure", newLocation);
         sendPUTRequest(body, "update");
-        String response = sendGETRequest();
-        //TODO: parse response -> switch sout
-        return response;
+        return sendGETRequest();
     }
 }

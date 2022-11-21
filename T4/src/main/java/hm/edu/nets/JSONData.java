@@ -3,6 +3,9 @@ package hm.edu.nets;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+
 public class JSONData {
 
     public ObjectNode data;
@@ -32,10 +35,25 @@ public class JSONData {
         data.with(driverID).put("status", Status.DRIVING.toString());
 
     }
-    //TTG is set with a 5min time buffer. arrival is still the original time.
-    public void setRouteTimes(String driverID, DriverRoute route) {
+    /**TTG is set with a 5min time buffer. arrival is still the original time. */
+    public HashMap<String, Object> setRouteTimes(String driverID, DriverRoute route) {
+        HashMap<String, Object> newRouteTimes = new HashMap<>();
+        long newTTG = route.updateTTG(route.getDepartureTime(), route.getArrivalTime());
         data.with(driverID).put("departureAt", route.getDepartureTime().toString());
         data.with(driverID).put("arrivalAt", route.getArrivalTime().toString());
-        data.with(driverID).put("ttg", route.getTTG());
+        data.with(driverID).put("ttg", newTTG);
+
+        newRouteTimes.put("departureAt", route.getDepartureTime());
+        newRouteTimes.put("arrivalAt", route.getArrivalTime());
+        newRouteTimes.put("ttg", newTTG);
+        return newRouteTimes;
+    }
+
+    public void setNewArrivalTimeInJSON(String driverID, ZonedDateTime newArrival) {
+        data.with(driverID).put("arrivalAt", String.valueOf(newArrival));
+    }
+
+    public String parseNewLocationFromJSON(ObjectNode input) {
+        return input.get("departure").asText();
     }
 }

@@ -41,11 +41,8 @@ public class DriverController {
         dataInst.setRouteLocations(id, input);
         DriverRoute currentRoute;
         currentRoute = new DriverRoute(getDriver(id), input.findValue("departure").asText(), input.findValue("arrival").asText(), dataInst);
-        dataInst.setRouteTimes(id, currentRoute);
-        HashMap<String, Object> timestamps = new HashMap<>();
-        timestamps.put("departure", currentRoute.getDepartureTime());
-        timestamps.put("arrival", currentRoute.getArrivalTime());
-        timestamps.put("ttg", currentRoute.getTTG());
+        HashMap<String, Object> timestamps;
+        timestamps = dataInst.setRouteTimes(id, currentRoute);
         switch (Integer.parseInt(id)) {
             case 1 -> routeDrv1 = currentRoute;
             case 2 -> routeDrv2 = currentRoute;
@@ -77,28 +74,46 @@ public class DriverController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        //TODO: process location request
-        Status newStatus = Status.valueOf(input.findValue("status").asText());
-        getDriver(id).setStatus(newStatus);
-        return "Status set to " + newStatus;
+        DriverRoute currentRoute;
+        currentRoute = switch (id) {
+            case "1" -> routeDrv1;
+            case "2" -> routeDrv2;
+            case "3" -> routeDrv3;
+            default -> throw new IllegalStateException("Unexpected value: " + id);
+        };
+        currentRoute.evaluateNewDriverLocation(dataInst.parseNewLocationFromJSON(input));
+        return currentRoute.driver.getStatus() == Status.DELAY ? "Cant reach destination in time, delay set.\n New arrival time: " + currentRoute.getArrivalTime() : "Still in time.";
+
     }
 
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
     public ObjectNode statusAll() {
-        if(routeDrv1 != null) {
+        if (routeDrv1 != null) {
             if (routeDrv1.isRouteActive) {
-                routeDrv1.updateTTG();
+                if (routeDrv1.getNewLocationTime() == null) {
+                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getArrivalTime());
+                } else {
+                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getNewLocationTime());
+                }
             }
         }
-        if(routeDrv2 != null) {
+        if (routeDrv2 != null) {
             if (routeDrv2.isRouteActive) {
-                routeDrv2.updateTTG();
+                if (routeDrv2.getNewLocationTime() == null) {
+                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getArrivalTime());
+                } else {
+                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getNewLocationTime());
+                }
             }
         }
-        if(routeDrv3 != null) {
+        if (routeDrv3 != null) {
             if (routeDrv3.isRouteActive) {
-                routeDrv3.updateTTG();
+                if (routeDrv3.getNewLocationTime() == null) {
+                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getArrivalTime());
+                } else {
+                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getNewLocationTime());
+                }
             }
         }
         return dataInst.data;
@@ -108,9 +123,27 @@ public class DriverController {
     @ResponseBody
     public ObjectNode status(@PathVariable String id) {
         switch (Integer.parseInt(id)) {
-            case 1-> routeDrv1.updateTTG();
-            case 2-> routeDrv2.updateTTG();
-            case 3-> routeDrv3.updateTTG();
+            case 1 -> {
+                if (routeDrv1.getNewLocationTime() == null) {
+                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getArrivalTime());
+                } else {
+                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getNewLocationTime());
+                }
+            }
+            case 2 -> {
+                if (routeDrv2.getNewLocationTime() == null) {
+                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getArrivalTime());
+                } else {
+                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getNewLocationTime());
+                }
+            }
+            case 3 -> {
+                if (routeDrv3.getNewLocationTime() == null) {
+                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getArrivalTime());
+                } else {
+                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getNewLocationTime());
+                }
+            }
         }
         return dataInst.data.with(id);
     }
