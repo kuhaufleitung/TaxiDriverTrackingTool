@@ -16,7 +16,6 @@ import java.util.Objects;
 public class DriverRoute {
     public final Driver driver;
     private final String route;
-    private String departureLocation;
     private String arrivalLocation;
     private ZonedDateTime newLocationTime;
     private ZonedDateTime departureTime;
@@ -28,7 +27,6 @@ public class DriverRoute {
     public DriverRoute(Driver driver, String departureLocation, String arrivalLocation, JSONData data) {
         this.driver = driver;
         this.data = data;
-        this.departureLocation = departureLocation;
         this.arrivalLocation = arrivalLocation;
         driver.setStatus(Status.DRIVING);
         this.route = queryRouteFromAPI(departureLocation, arrivalLocation);
@@ -138,10 +136,11 @@ public class DriverRoute {
     }
 
     //Adding 5min safety margin to ttg
-    public long updateTTG(ZonedDateTime myLocTime, ZonedDateTime destLocTime) {
+    public long updateTTG(ZonedDateTime destLocTime) {
+        ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime finish = destLocTime.plus(5, ChronoUnit.MINUTES);
         ChronoUnit unit = ChronoUnit.MINUTES;
-        long ttg = unit.between(myLocTime, finish);
+        long ttg = unit.between(now, finish);
         data.data.with(String.valueOf(driver.getDriverID())).put("ttg", ttg);
         return ttg;
     }
@@ -153,14 +152,12 @@ public class DriverRoute {
             ObjectNode json = mapper.readValue(newRoute, new TypeReference<>() {
             });
             String arrival = json.get("routes").get(0).get("sections").get(0).get("arrival").get("time").asText();
-            String departure = json.get("routes").get(0).get("sections").get(0).get("departure").get("time").asText();
             ZonedDateTime newArrivalTime = ZonedDateTime.parse(arrival);
-            ZonedDateTime newDepartureTime = ZonedDateTime.parse(departure);
             this.newLocationTime = newArrivalTime;
             ZonedDateTime arrivalWithSafetyMargin = arrivalTime.plus(5, ChronoUnit.MINUTES);
             if (newArrivalTime.isAfter(arrivalWithSafetyMargin)) {
                 driver.setStatus(Status.DELAY);
-                updateTTG(newDepartureTime, newArrivalTime);
+                updateTTG(newArrivalTime);
                 data.setNewArrivalTimeInJSON(String.valueOf(driver.getDriverID()), newArrivalTime);
 
             }

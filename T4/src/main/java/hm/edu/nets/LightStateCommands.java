@@ -40,7 +40,7 @@ public class LightStateCommands {
 
     static HttpRequest lightBlinking(int driverID) {
         String hostRequestPath = URI_Addresses.HueURI +  "/" + driverID + "/state";
-        JSONObject body = new JSONObject().put("alert", "select").put("on", true).put("hue", HueColor.RED);
+        JSONObject body = new JSONObject().put("alert", "lselect").put("on", true).put("hue", HueColor.RED);
         return HttpRequest.newBuilder()
                 .uri(URI.create(hostRequestPath))
                 .PUT(HttpRequest.BodyPublishers.ofString(body.toString()))

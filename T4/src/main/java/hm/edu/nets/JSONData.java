@@ -38,7 +38,7 @@ public class JSONData {
     /**TTG is set with a 5min time buffer. arrival is still the original time. */
     public HashMap<String, Object> setRouteTimes(String driverID, DriverRoute route) {
         HashMap<String, Object> newRouteTimes = new HashMap<>();
-        long newTTG = route.updateTTG(route.getDepartureTime(), route.getArrivalTime());
+        long newTTG = route.updateTTG(route.getArrivalTime());
         data.with(driverID).put("departureAt", route.getDepartureTime().toString());
         data.with(driverID).put("arrivalAt", route.getArrivalTime().toString());
         data.with(driverID).put("ttg", newTTG);

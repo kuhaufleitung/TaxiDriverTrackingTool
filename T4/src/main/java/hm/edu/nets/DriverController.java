@@ -114,27 +114,27 @@ public class DriverController {
         if (routeDrv1 != null) {
             if (routeDrv1.isRouteActive) {
                 if (routeDrv1.getNewLocationTime() == null) {
-                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getArrivalTime());
+                    routeDrv1.updateTTG(routeDrv1.getArrivalTime());
                 } else {
-                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getNewLocationTime());
+                    routeDrv1.updateTTG(routeDrv1.getNewLocationTime());
                 }
             }
         }
         if (routeDrv2 != null) {
             if (routeDrv2.isRouteActive) {
                 if (routeDrv2.getNewLocationTime() == null) {
-                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getArrivalTime());
+                    routeDrv2.updateTTG(routeDrv2.getArrivalTime());
                 } else {
-                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getNewLocationTime());
+                    routeDrv2.updateTTG(routeDrv2.getNewLocationTime());
                 }
             }
         }
         if (routeDrv3 != null) {
             if (routeDrv3.isRouteActive) {
                 if (routeDrv3.getNewLocationTime() == null) {
-                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getArrivalTime());
+                    routeDrv3.updateTTG(routeDrv3.getArrivalTime());
                 } else {
-                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getNewLocationTime());
+                    routeDrv3.updateTTG(routeDrv3.getNewLocationTime());
                 }
             }
         }
@@ -147,23 +147,23 @@ public class DriverController {
         switch (Integer.parseInt(id)) {
             case 1 -> {
                 if (routeDrv1.getNewLocationTime() == null) {
-                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getArrivalTime());
+                    routeDrv1.updateTTG(routeDrv1.getArrivalTime());
                 } else {
-                    routeDrv1.updateTTG(routeDrv1.getDepartureTime(), routeDrv1.getNewLocationTime());
+                    routeDrv1.updateTTG(routeDrv1.getNewLocationTime());
                 }
             }
             case 2 -> {
                 if (routeDrv2.getNewLocationTime() == null) {
-                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getArrivalTime());
+                    routeDrv2.updateTTG(routeDrv2.getArrivalTime());
                 } else {
-                    routeDrv2.updateTTG(routeDrv2.getDepartureTime(), routeDrv2.getNewLocationTime());
+                    routeDrv2.updateTTG(routeDrv2.getNewLocationTime());
                 }
             }
             case 3 -> {
                 if (routeDrv3.getNewLocationTime() == null) {
-                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getArrivalTime());
+                    routeDrv3.updateTTG(routeDrv3.getArrivalTime());
                 } else {
-                    routeDrv3.updateTTG(routeDrv3.getDepartureTime(), routeDrv3.getNewLocationTime());
+                    routeDrv3.updateTTG(routeDrv3.getNewLocationTime());
                 }
             }
         }
