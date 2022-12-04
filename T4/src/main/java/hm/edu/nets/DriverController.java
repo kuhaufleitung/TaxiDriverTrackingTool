@@ -6,31 +6,42 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class DriverController {
 
     JSONData dataInst = new JSONData();
-    Driver drv1 = new Driver(1, dataInst);
-    DriverRoute routeDrv1;
-    Driver drv2 = new Driver(2, dataInst);
-    DriverRoute routeDrv2;
-    Driver drv3 = new Driver(3, dataInst);
-    DriverRoute routeDrv3;
+
+    private final HashMap<Integer, Driver> driverInstances = new HashMap<>();
+    private final HashMap<Integer, DriverRoute> driverRoutes = new HashMap<>();
 
     @Autowired
     private ObjectMapper mapper;
 
     public DriverController() {
         mapper = new ObjectMapper();
+        driverInstances.put(1, new Driver(1, dataInst));
+        driverInstances.put(2, new Driver(2, dataInst));
+        driverInstances.put(3, new Driver(3, dataInst));
+        driverRoutes.put(1, null);
+        driverRoutes.put(2, null);
+        driverRoutes.put(3, null);
+
+
     }
 
     @RequestMapping(value = "/driver/{id}/route", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public HashMap<String, Object> route(@PathVariable String id, @RequestBody String json) {
+    public HashMap<String, Object> route(@PathVariable int id, @RequestBody String json) {
         ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>() {
@@ -38,21 +49,17 @@ public class DriverController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        dataInst.setRouteLocations(id, input);
+        dataInst.setRouteLocations(String.valueOf(id), input);
         DriverRoute currentRoute;
         currentRoute = new DriverRoute(getDriver(id), input.findValue("departure").asText(), input.findValue("arrival").asText(), dataInst);
         HashMap<String, Object> timestamps;
-        timestamps = dataInst.setRouteTimes(id, currentRoute);
-        switch (Integer.parseInt(id)) {
-            case 1 -> routeDrv1 = currentRoute;
-            case 2 -> routeDrv2 = currentRoute;
-            case 3 -> routeDrv3 = currentRoute;
-        }
+        timestamps = dataInst.setRouteTimes(String.valueOf(id), currentRoute);
+        driverRoutes.put(id, currentRoute);
         return timestamps;
     }
 
     @RequestMapping(value = "/driver/{id}/status", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public String status(@PathVariable String id, @RequestBody String json) {
+    public String status(@PathVariable int id, @RequestBody String json) {
         ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>() {
@@ -67,7 +74,7 @@ public class DriverController {
 
     @RequestMapping(value = "/driver/{id}/update", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String update(@PathVariable String id, @RequestBody String json) {
+    public String update(@PathVariable int id, @RequestBody String json) {
         ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>() {
@@ -75,20 +82,14 @@ public class DriverController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        DriverRoute currentRoute;
-        currentRoute = switch (id) {
-            case "1" -> routeDrv1;
-            case "2" -> routeDrv2;
-            case "3" -> routeDrv3;
-            default -> throw new IllegalStateException("Unexpected value: " + id);
-        };
+        DriverRoute currentRoute = driverRoutes.get(id);
         currentRoute.evaluateNewDriverLocation(dataInst.parseNewLocationFromJSON(input));
         return currentRoute.driver.getStatus() == Status.DELAY ? "Cant reach destination in time, delay set.\n New arrival time: " + currentRoute.getArrivalTime() : "Still in time.";
     }
 
     @RequestMapping(value = "/driver/{id}/cancel", method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String cancel(@PathVariable String id, @RequestBody String json) {
+    public String cancel(@PathVariable int id, @RequestBody String json) {
         ObjectNode input;
         try {
             input = mapper.readValue(json, new TypeReference<>() {
@@ -96,13 +97,7 @@ public class DriverController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        DriverRoute currentRoute;
-        currentRoute = switch (id) {
-            case "1" -> routeDrv1;
-            case "2" -> routeDrv2;
-            case "3" -> routeDrv3;
-            default -> throw new IllegalStateException("Unexpected value: " + id);
-        };
+        DriverRoute currentRoute = driverRoutes.get(id);
         currentRoute.cancelRide();
         return "Ride canceled.";
     }
@@ -111,30 +106,16 @@ public class DriverController {
     @RequestMapping(value = "/driver", method = RequestMethod.GET)
     @ResponseBody
     public ObjectNode statusAll() {
-        if (routeDrv1 != null) {
-            if (routeDrv1.isRouteActive) {
-                if (routeDrv1.getNewLocationTime() == null) {
-                    routeDrv1.updateTTG(routeDrv1.getArrivalTime());
-                } else {
-                    routeDrv1.updateTTG(routeDrv1.getNewLocationTime());
-                }
-            }
-        }
-        if (routeDrv2 != null) {
-            if (routeDrv2.isRouteActive) {
-                if (routeDrv2.getNewLocationTime() == null) {
-                    routeDrv2.updateTTG(routeDrv2.getArrivalTime());
-                } else {
-                    routeDrv2.updateTTG(routeDrv2.getNewLocationTime());
-                }
-            }
-        }
-        if (routeDrv3 != null) {
-            if (routeDrv3.isRouteActive) {
-                if (routeDrv3.getNewLocationTime() == null) {
-                    routeDrv3.updateTTG(routeDrv3.getArrivalTime());
-                } else {
-                    routeDrv3.updateTTG(routeDrv3.getNewLocationTime());
+
+        for (Map.Entry<Integer, DriverRoute> entry : driverRoutes.entrySet()) {
+            DriverRoute currentRoute = entry.getValue();
+            if (currentRoute != null) {
+                if (currentRoute.isRouteActive) {
+                    if (currentRoute.getNewLocationTime() == null) {
+                        currentRoute.updateTTG(currentRoute.getArrivalTime());
+                    } else {
+                        currentRoute.updateTTG(currentRoute.getNewLocationTime());
+                    }
                 }
             }
         }
@@ -143,40 +124,19 @@ public class DriverController {
 
     @RequestMapping(value = "/driver/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public ObjectNode status(@PathVariable String id) {
-        switch (Integer.parseInt(id)) {
-            case 1 -> {
-                if (routeDrv1.getNewLocationTime() == null) {
-                    routeDrv1.updateTTG(routeDrv1.getArrivalTime());
+    public ObjectNode status(@PathVariable int id) {
+            if (driverRoutes.get(id) != null) {
+                if (driverRoutes.get(id).getNewLocationTime() == null) {
+                    driverRoutes.get(id).updateTTG(driverRoutes.get(id).getArrivalTime());
                 } else {
-                    routeDrv1.updateTTG(routeDrv1.getNewLocationTime());
+                    driverRoutes.get(id).updateTTG(driverRoutes.get(id).getNewLocationTime());
                 }
             }
-            case 2 -> {
-                if (routeDrv2.getNewLocationTime() == null) {
-                    routeDrv2.updateTTG(routeDrv2.getArrivalTime());
-                } else {
-                    routeDrv2.updateTTG(routeDrv2.getNewLocationTime());
-                }
-            }
-            case 3 -> {
-                if (routeDrv3.getNewLocationTime() == null) {
-                    routeDrv3.updateTTG(routeDrv3.getArrivalTime());
-                } else {
-                    routeDrv3.updateTTG(routeDrv3.getNewLocationTime());
-                }
-            }
-        }
-        return dataInst.data.with(id);
+        return dataInst.data.with(String.valueOf(id));
     }
 
 
-    private Driver getDriver(String ID) {
-        return switch (Integer.parseInt(ID)) {
-            case 1 -> drv1;
-            case 2 -> drv2;
-            case 3 -> drv3;
-            default -> throw new IllegalStateException("Unexpected value: " + ID);
-        };
+    private Driver getDriver(int ID) {
+        return driverInstances.get(ID);
     }
 }
