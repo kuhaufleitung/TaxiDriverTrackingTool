@@ -22,7 +22,7 @@ public class DriverRoute {
     private ZonedDateTime arrivalTime;
     private final JSONData data;
     public boolean isRouteActive;
-    private static final String API_KEY = "wiMfx6EU3WKC_1nwth9MxE8Sgh1DcvRcj9uR76T5h3E";
+    private static final String API_KEY = "";
 
     public DriverRoute(Driver driver, String departureLocation, String arrivalLocation, JSONData data) {
         this.driver = driver;
